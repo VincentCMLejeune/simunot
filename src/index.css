@@ -60,10 +60,14 @@
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
+  background: var(--bg);
 }
 
 body {
   margin: 0;
+  background-image: url(./assets/images/drondron.png);
+  background-repeat: repeat;
+  background-size: 150px 150px;
 }
 
 h1,
