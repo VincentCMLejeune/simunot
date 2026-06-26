@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { type SuccessionData, type Heir } from '../../types/succession';
 import StepAyantsDroit from './StepAyantsDroit';
 import StepDonations from './StepDonations';
 import StepAssurancesVie from './StepAssurancesVie';
@@ -8,20 +9,40 @@ import StepCalculDroits from './StepCalculDroits';
 
 const steps = ['Ayants droit', 'Donations', 'Assurances-vie', 'Patrimoine', 'Synthèse', 'Calcul des droits'];
 
+const initialSuccessionData: SuccessionData = {
+    ayantsDroit: [],
+};
+
 export default function Succession() {
     const [currentStep, setCurrentStep] = useState(0);
+    const [savedState, setSavedState] = useState<SuccessionData>(initialSuccessionData);
+
+    const handleSaveAyantsDroit = (ayantsDroit: Heir[]) => {
+        setSavedState((previous) => ({ ...previous, ayantsDroit }));
+    };
+
+    const goToStep = (nextStep: number) => {
+        if (nextStep !== currentStep) {
+            setCurrentStep(nextStep);
+        }
+    };
+
     const handleNext = () => {
-        setCurrentStep((previous) => (previous < steps.length - 1 ? previous + 1 : previous));
+        if (currentStep < steps.length - 1) {
+            goToStep(currentStep + 1);
+        }
     };
 
     const handlePrevious = () => {
-        setCurrentStep((previous) => (previous > 0 ? previous - 1 : previous));
+        if (currentStep > 0) {
+            goToStep(currentStep - 1);
+        }
     };
 
     const renderStep = () => {
         switch (currentStep) {
             case 0:
-                return <StepAyantsDroit />;
+                return <StepAyantsDroit initialHeirs={savedState.ayantsDroit} onSave={handleSaveAyantsDroit} />;
             case 1:
                 return <StepDonations />;
             case 2:
@@ -41,7 +62,7 @@ export default function Succession() {
         <div>
             <div>
                 {steps.map((step, index) => (
-                    <button key={step} type="button" disabled={index > currentStep}>
+                    <button key={step} type="button" onClick={() => goToStep(index)}>
                         {step}
                     </button>
                 ))}
