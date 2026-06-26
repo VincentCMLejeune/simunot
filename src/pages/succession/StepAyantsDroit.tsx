@@ -1,5 +1,6 @@
 import { useState, type ChangeEvent, type FormEvent } from 'react';
 import { type Heir, type HeirShares } from '../../types/succession';
+import { addFractions, formatFraction, getMissingFraction, parseFraction, type Fraction } from '../../utils/fractions';
 
 type StepAyantsDroitProps = {
     initialHeirs: Heir[];
@@ -23,7 +24,7 @@ const emptyHeirFormData: HeirFormData = {
 export default function StepAyantsDroit({ initialHeirs, onSave }: StepAyantsDroitProps) {
     const [heirs, setHeirs] = useState<Heir[]>(initialHeirs);
     const [isFormOpen, setIsFormOpen] = useState(false);
-    const [editingId, setEditingId] = useState<number | null>(null);
+    const [editingId, setEditingId] = useState<string | null>(null);
     const [formData, setFormData] = useState<HeirFormData>(emptyHeirFormData);
 
     const handleOpenForm = (heir?: Heir) => {
@@ -36,7 +37,7 @@ export default function StepAyantsDroit({ initialHeirs, onSave }: StepAyantsDroi
         setIsFormOpen(true);
     };
 
-    const handleDelete = (id: number) => {
+    const handleDelete = (id: string) => {
         const nextHeirs = heirs.filter((heir) => heir.id !== id);
         setHeirs(nextHeirs);
         onSave(nextHeirs);
@@ -45,7 +46,7 @@ export default function StepAyantsDroit({ initialHeirs, onSave }: StepAyantsDroi
     const handleChange = (event: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = event.target;
 
-        if (name === 'plainePropriete' || name === 'nuePropriete' || name === 'usufruit') {
+        if (name === 'pleinePropriete' || name === 'nuePropriete' || name === 'usufruit') {
             setFormData((previous) => ({
                 ...previous,
                 shares: {
@@ -73,6 +74,17 @@ export default function StepAyantsDroit({ initialHeirs, onSave }: StepAyantsDroi
         setEditingId(null);
         setFormData(emptyHeirFormData);
     };
+
+    const totalPleinePropriete = heirs.reduce((total, heir) => {
+        const parsed = parseFraction(heir.shares.pleinePropriete);
+        if (!parsed) {
+            return total;
+        }
+
+        return total ? addFractions(total, parsed) : parsed;
+    }, null as Fraction | null);
+
+    const missingFraction = getMissingFraction(totalPleinePropriete);
 
     return (
         <div>
@@ -122,8 +134,8 @@ export default function StepAyantsDroit({ initialHeirs, onSave }: StepAyantsDroi
                         <label>
                             Quote-part — Pleine propriété
                             <input
-                                name="plainePropriete"
-                                value={formData.shares.plainePropriete}
+                                name="pleinePropriete"
+                                value={formData.shares.pleinePropriete}
                                 onChange={handleChange}
                                 placeholder="1/2"
                             />
@@ -162,21 +174,31 @@ export default function StepAyantsDroit({ initialHeirs, onSave }: StepAyantsDroi
                 {heirs.length === 0 ? (
                     <p>Aucun ayant droit enregistré</p>
                 ) : (
-                    <ul>
-                        {heirs.map((heir) => (
-                            <li key={heir.id}>
-                                <span>
-                                    {heir.name} — {heir.relationship} — PP: {heir.shares.plainePropriete || '—'} / NP: {heir.shares.nuePropriete || '—'} / U: {heir.shares.usufruit || '—'}
-                                </span>
-                                <button type="button" onClick={() => handleOpenForm(heir)}>
-                                    Modifier
-                                </button>
-                                <button type="button" onClick={() => handleDelete(heir.id)}>
-                                    Supprimer
-                                </button>
-                            </li>
-                        ))}
-                    </ul>
+                    <div>
+                        <div>
+                            <strong>Total pleine propriété :</strong> {totalPleinePropriete ? formatFraction(totalPleinePropriete) : '—'}
+                        </div>
+                        {missingFraction && (
+                            <div>
+                                Fraction manquante : {formatFraction(missingFraction)}
+                            </div>
+                        )}
+                        <ul>
+                            {heirs.map((heir) => (
+                                <li key={heir.id}>
+                                    <span>
+                                        {heir.name} — {heir.relationship} — PP: {heir.shares.pleinePropriete || '—'} / NP: {heir.shares.nuePropriete || '—'} / U: {heir.shares.usufruit || '—'}
+                                    </span>
+                                    <button type="button" onClick={() => handleOpenForm(heir)}>
+                                        Modifier
+                                    </button>
+                                    <button type="button" onClick={() => handleDelete(heir.id)}>
+                                        Supprimer
+                                    </button>
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
                 )}
             </div>
         </div>
