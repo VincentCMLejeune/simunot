@@ -1,59 +1,77 @@
 export type Fraction = {
-    numerator: number;
-    denominator: number;
+    readonly numerator: number;
+    readonly denominator: number;
 };
+
+const FRACTION_REGEX = /^(\d+)(?:\/(\d+))?$/;
 
 export const parseFraction = (value: string): Fraction | null => {
     const trimmed = value.trim();
+    const match = FRACTION_REGEX.exec(trimmed);
 
-    if (!trimmed) {
+    if (!match) {
         return null;
     }
 
-    const parts = trimmed.split('/');
+    const numerator = parseInt(match[1], 10);
 
-    if (parts.length === 1) {
-        const parsed = Number(parts[0]);
-        return Number.isFinite(parsed) ? { numerator: parsed, denominator: 1 } : null;
+    if (!Number.isSafeInteger(numerator)) {
+        return null;
     }
 
-    if (parts.length === 2) {
-        const numerator = Number(parts[0]);
-        const denominator = Number(parts[1]);
-
-        if (!Number.isFinite(numerator) || !Number.isFinite(denominator) || denominator === 0) {
-            return null;
-        }
-
-        return { numerator, denominator };
+    if (match[2] === undefined) {
+        return { numerator, denominator: 1 };
     }
 
-    return null;
+    const denominator = parseInt(match[2], 10);
+
+    if (!Number.isSafeInteger(denominator) || denominator === 0) {
+        return null;
+    }
+
+    return { numerator, denominator };
 };
 
 export const greatestCommonDivisor = (left: number, right: number): number => {
-    if (right === 0) {
-        return left;
+    let a = Math.abs(left);
+    let b = Math.abs(right);
+
+    while (b !== 0) {
+        const remainder = a % b;
+        a = b;
+        b = remainder;
     }
 
-    return greatestCommonDivisor(right, left % right);
+    return a;
 };
 
 export const simplifyFraction = (fraction: Fraction): Fraction => {
-    const absoluteNumerator = Math.abs(fraction.numerator);
-    const absoluteDenominator = Math.abs(fraction.denominator);
-    const gcd = greatestCommonDivisor(absoluteNumerator, absoluteDenominator);
+    if (fraction.numerator === 0) {
+        return { numerator: 0, denominator: 1 };
+    }
+
+    const gcd = greatestCommonDivisor(
+        Math.abs(fraction.numerator),
+        Math.abs(fraction.denominator),
+    );
+
+    const sign = fraction.denominator < 0 ? -1 : 1;
 
     return {
-        numerator: fraction.numerator / gcd,
-        denominator: fraction.denominator / gcd,
+        numerator: (sign * fraction.numerator) / gcd,
+        denominator: (sign * fraction.denominator) / gcd,
     };
 };
 
 export const addFractions = (left: Fraction, right: Fraction): Fraction => {
-    const denominator = left.denominator * right.denominator;
-    const numerator = left.numerator * right.denominator + right.numerator * left.denominator;
-    return simplifyFraction({ numerator, denominator });
+    const gcd = greatestCommonDivisor(left.denominator, right.denominator);
+    const lcm = (left.denominator / gcd) * right.denominator;
+
+    const numerator =
+        left.numerator * (lcm / left.denominator) +
+        right.numerator * (lcm / right.denominator);
+
+    return simplifyFraction({ numerator, denominator: lcm });
 };
 
 export const formatFraction = (fraction: Fraction): string => {
@@ -69,8 +87,8 @@ export const getMissingFraction = (fraction: Fraction | null): Fraction | null =
         return null;
     }
 
-    return {
+    return simplifyFraction({
         numerator: fraction.denominator - fraction.numerator,
         denominator: fraction.denominator,
-    };
+    });
 };
