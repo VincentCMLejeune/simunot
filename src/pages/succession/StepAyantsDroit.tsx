@@ -1,6 +1,6 @@
 import { useState, type ChangeEvent, type FormEvent } from 'react';
 import { type Heir, type HeirShares } from '../../types/succession';
-import { RELATIONSHIP_TYPE_LIST, type RelationshipValue } from '../../types/relationshipType';
+import { RELATIONSHIP_TYPE_LIST, getRelationshipType, type RelationshipValue } from '../../types/relationshipType';
 import { addFractions, formatFraction, getMissingFraction, parseFraction, type Fraction } from '../../utils/fractions';
 
 type StepAyantsDroitProps = {
@@ -8,7 +8,7 @@ type StepAyantsDroitProps = {
     onSave: (heirs: Heir[]) => void;
 };
 
-type HeirFormData = Omit<Heir, 'id' | 'relationship'> & {
+type HeirFormData = Omit<Heir, 'id' | 'relationship' | 'relationshipLabel'> & {
     relationship: RelationshipValue | '';
 };
 
@@ -70,11 +70,23 @@ export default function StepAyantsDroit({ initialHeirs, onSave }: StepAyantsDroi
             return;
         }
 
+        const relationship = formData.relationship as RelationshipValue;
+
         const nextHeirs =
             editingId === null
-                ? [...heirs, { id: crypto.randomUUID(), ...formData, relationship: formData.relationship }]
+                ? [...heirs, {
+                    id: crypto.randomUUID(),
+                    ...formData,
+                    relationship,
+                    relationshipLabel: getRelationshipType(relationship).label,
+                }]
                 : heirs.map((heir) =>
-                    (heir.id === editingId ? { id: heir.id, ...formData, relationship: formData.relationship } : heir)
+                    (heir.id === editingId ? {
+                        id: heir.id,
+                        ...formData,
+                        relationship,
+                        relationshipLabel: getRelationshipType(relationship).label,
+                    } : heir)
                 );
 
         setHeirs(nextHeirs);
@@ -189,7 +201,7 @@ export default function StepAyantsDroit({ initialHeirs, onSave }: StepAyantsDroi
                             {heirs.map((heir) => (
                                 <li key={heir.id}>
                                     <span>
-                                        {heir.name} — {heir.relationship} — PP: {heir.shares.pleinePropriete || '—'} / NP: {heir.shares.nuePropriete || '—'} / U: {heir.shares.usufruit || '—'}
+                                        {heir.name} — {heir.relationshipLabel} — PP: {heir.shares.pleinePropriete || '—'} / NP: {heir.shares.nuePropriete || '—'} / U: {heir.shares.usufruit || '—'}
                                     </span>
                                     <button type="button" onClick={() => handleOpenForm(heir)}>
                                         Modifier

@@ -10,6 +10,7 @@ export interface Heir {
     id: string;
     name: string;
     relationship: RelationshipValue;
+    relationshipLabel: string;
     shares: HeirShares;
 }
 
