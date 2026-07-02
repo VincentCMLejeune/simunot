@@ -1,3 +1,5 @@
+import { type RelationshipValue } from './relationshipType';
+
 export interface HeirShares {
     pleinePropriete: string;
     nuePropriete: string;
@@ -7,7 +9,7 @@ export interface HeirShares {
 export interface Heir {
     id: string;
     name: string;
-    relationship: string;
+    relationship: RelationshipValue;
     shares: HeirShares;
 }
 
