@@ -122,6 +122,7 @@ export default function StepAyantsDroit({ initialHeirs, onSave }: StepAyantsDroi
                                 name="name"
                                 value={formData.name}
                                 onChange={handleChange}
+                                autoComplete="off"
                                 required
                             />
                         </label>
@@ -152,6 +153,7 @@ export default function StepAyantsDroit({ initialHeirs, onSave }: StepAyantsDroi
                                 value={formData.shares.pleinePropriete}
                                 onChange={handleChange}
                                 placeholder="1/2"
+                                autoComplete="off"
                             />
                         </label>
                     </div>
@@ -163,6 +165,7 @@ export default function StepAyantsDroit({ initialHeirs, onSave }: StepAyantsDroi
                                 value={formData.shares.nuePropriete}
                                 onChange={handleChange}
                                 placeholder="1/2"
+                                autoComplete="off"
                             />
                         </label>
                     </div>
@@ -174,6 +177,7 @@ export default function StepAyantsDroit({ initialHeirs, onSave }: StepAyantsDroi
                                 value={formData.shares.usufruit}
                                 onChange={handleChange}
                                 placeholder="1/2"
+                                autoComplete="off"
                             />
                         </label>
                     </div>
