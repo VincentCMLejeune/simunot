@@ -1,5 +1,6 @@
 import { useState, type ChangeEvent, type FormEvent } from 'react';
 import { type Heir, type HeirShares } from '../../types/succession';
+import { RELATIONSHIP_TYPE_LIST, type RelationshipValue } from '../../types/relationshipType';
 import { addFractions, formatFraction, getMissingFraction, parseFraction, type Fraction } from '../../utils/fractions';
 
 type StepAyantsDroitProps = {
@@ -7,7 +8,9 @@ type StepAyantsDroitProps = {
     onSave: (heirs: Heir[]) => void;
 };
 
-type HeirFormData = Omit<Heir, 'id'>;
+type HeirFormData = Omit<Heir, 'id' | 'relationship'> & {
+    relationship: RelationshipValue | '';
+};
 
 const emptyShares: HeirShares = {
     pleinePropriete: '',
@@ -63,10 +66,16 @@ export default function StepAyantsDroit({ initialHeirs, onSave }: StepAyantsDroi
     const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
 
+        if (!formData.relationship) {
+            return;
+        }
+
         const nextHeirs =
             editingId === null
-                ? [...heirs, { id: crypto.randomUUID(), ...formData }]
-                : heirs.map((heir) => (heir.id === editingId ? { id: heir.id, ...formData } : heir));
+                ? [...heirs, { id: crypto.randomUUID(), ...formData, relationship: formData.relationship }]
+                : heirs.map((heir) =>
+                    (heir.id === editingId ? { id: heir.id, ...formData, relationship: formData.relationship } : heir)
+                );
 
         setHeirs(nextHeirs);
         onSave(nextHeirs);
@@ -115,18 +124,11 @@ export default function StepAyantsDroit({ initialHeirs, onSave }: StepAyantsDroi
                                 required
                             >
                                 <option value="" disabled>Sélectionner</option>
-                                <option value="Conjoint survivant">Conjoint survivant</option>
-                                <option value="Partenaire de PACS">Partenaire de PACS</option>
-                                <option value="Enfant">Enfant</option>
-                                <option value="Petit-enfant">Petit-enfant</option>
-                                <option value="Frère/soeur">Frère/soeur</option>
-                                <option value="Neveu/nièce">Neveu/nièce</option>
-                                <option value="Père/mère">Père/mère</option>
-                                <option value="Parent jusqu'au 4ème degré">Parent jusqu'au 4ème degré</option>
-                                <option value="Parent au-delà du 4ème degré, tiers ou légataire">
-                                    Parent au-delà du 4ème degré, tiers ou légataire
-                                </option>
-                                <option value="Association exonérée de droits">Association exonérée de droits</option>
+                                {RELATIONSHIP_TYPE_LIST.map((relationshipType) => (
+                                    <option key={relationshipType.value} value={relationshipType.value}>
+                                        {relationshipType.label}
+                                    </option>
+                                ))}
                             </select>
                         </label>
                     </div>
